@@ -1,0 +1,62 @@
+#define photoRPin  A0 
+#define pirPin1  A1
+#define pirPin2  A2
+#define r1 2
+#define r2 3
+int minLight;
+int maxLight;
+int lightLevel;
+int adjustedLightLevel;
+long lastSeen = 0;
+boolean presence = false;
+boolean presence1 = false;
+boolean rStatus = false;
+boolean rStatus1 = false;
+void setup() {
+ Serial.begin(9600);
+ pinMode(photoRPin,INPUT);
+ pinMode(pirPin1,INPUT);
+ pinMode(pirPin2,INPUT);
+ pinMode(r1,OUTPUT);
+ pinMode(r2,OUTPUT);
+ digitalWrite(r1,HIGH);
+ digitalWrite(r2,HIGH);
+ lightLevel=analogRead(photoRPin);
+ minLight=lightLevel-20;
+ maxLight=lightLevel;
+}
+
+void loop(){
+ lightLevel=analogRead(photoRPin);
+ if(minLight>lightLevel){
+ minLight=lightLevel;
+ }
+ if(maxLight<lightLevel){
+ maxLight=lightLevel;
+ }
+ 
+ adjustedLightLevel = map(lightLevel, minLight, maxLight, 0, 100); 
+ presence = digitalRead(pirPin1);
+ presence1 = digitalRead(pirPin2) ;
+ if(presence || presence1){
+  lastSeen = millis();
+ }
+ if(adjustedLightLevel<20){
+  if((presence || presence1) && (!rStatus || !rStatus1)){
+    if(presence){
+      digitalWrite(r1,LOW);
+      rStatus=true;
+    }
+    if(presence1){
+      digitalWrite(r2,LOW);
+      rStatus=true;
+    }
+  }
+ }
+ if((rStatus || rStatus1) && (millis()-lastSeen>60000)){
+    digitalWrite(r1,HIGH);
+    digitalWrite(r2,HIGH);
+    rStatus=false;
+    rStatus1=false;
+ }
+}
